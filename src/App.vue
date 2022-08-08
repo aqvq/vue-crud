@@ -30,7 +30,7 @@
       <el-table-column prop="address" label="地址" width="300" />
       <el-table-column fixed="right" label="Operations" width="120">
         <template #default="scope">
-          <el-button link type="primary" size="small" @click="">编辑</el-button>
+          <el-button link type="primary" size="small" @click="handleRowEdit(scope.row)">编辑</el-button>
           <el-button link type="primary" size="small" style="color:#F56C6C;" @click="handleRowDelete(scope.row)">删除</el-button>
         </template>
       </el-table-column>
@@ -131,11 +131,19 @@ const handleAdd = ()=>{
 // 确认添加
 const dialogConfirm = ()=>{
   dialogFormVisible = false;
-  // 1. 拿到数据
+  // 判断是新增还是编辑
+  if(dialogType==='add'){
+    // 1. 拿到数据
+    // 2. 添加到Table中
+    tableData.push({id:`${tableData.length+1}`, ...tableForm})
 
-  // 2. 添加到Table中
-  tableData.push({id:`${tableData.length+1}`, ...tableForm})
-  console.log(tableData);
+  }else{
+    // 1. 获取到当前索引
+    // 2. 替换当前数据
+    const index = tableData.findIndex(item=>item.id==tableForm.id);
+    tableData.splice(index, 1, tableForm);
+  }
+
 }
 // 删除多选
 function handleDeleteList(){
@@ -145,7 +153,12 @@ function handleDeleteList(){
   })
   multipleSelection=[]
 }
-
+// 编辑
+function handleRowEdit(row){
+  dialogType = 'edit';
+  tableForm = {...row};
+  dialogFormVisible = true;
+}
 
 
 </script>

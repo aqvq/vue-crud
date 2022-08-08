@@ -13,7 +13,12 @@
     </div>
 
 <!--    table-->
-    <el-table :data="tableData" style="width: 100%">
+    <el-table     ref="multipleTableRef"
+                  :data="tableData"
+                  style="width: 100%"
+                  @selection-change="handleSelectionChange"
+                  border>
+      <el-table-column type="selection" width="55" />
       <el-table-column fixed prop="date" label="Date" width="150" />
       <el-table-column prop="name" label="Name" width="120" />
       <el-table-column prop="state" label="State" width="120" />
@@ -37,6 +42,8 @@
 import {ref} from "vue";
 // 数据
 let queryInput = ref("");
+let multipleSelection = ref([])
+
 let tableData = ref([  {
   date: '2016-05-03',
   name: 'Tom',
@@ -77,6 +84,12 @@ let tableData = ref([  {
 const handleRowClick= ()=>{
   console.log('click')
 }
+const handleSelectionChange = (val) => {
+  multipleSelection.value = val
+  console.log(val);
+}
+
+
 </script>
 
 <style scoped>
@@ -87,4 +100,20 @@ const handleRowClick= ()=>{
   left:50%;
   transform:translate(-50%,-50%);
 }
+
+.title{
+  text-align: center;
+}
+
+.query-box{
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.el-input{
+  width: 200px;
+}
+
+
 </style>

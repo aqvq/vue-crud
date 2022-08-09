@@ -7,5 +7,5 @@ export default defineConfig({
     refTransform: true,
     reactivityTransform:true
   })],
-  base:'./'
+  base:'./',
 })

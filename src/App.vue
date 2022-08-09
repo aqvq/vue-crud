@@ -7,7 +7,7 @@
 </div>
 <!--    query-->
     <div class="query-box">
-      <el-input class="query-input" v-model="queryInput" placeholder="请输入姓名搜索" @input="handleQueryName"/>
+      <el-input class="query-input" v-model="queryInput" placeholder="请输入姓名搜索" @change="handleQueryName"/>
       <div class="button-list">
         <el-button type="primary" @click="handleAdd">增加</el-button>
         <el-button type="danger" @click="handleDeleteList" v-show="multipleSelection.length>0">删除</el-button>
@@ -35,6 +35,17 @@
         </template>
       </el-table-column>
     </el-table>
+
+      <el-pagination
+          background
+          layout="prev, pager, next"
+          :total="total"
+          style="display: flex;justify-content: flex-end; margin-top: 20px"
+          v-model:current-page="curPage"
+          @current-change="handleChangePage"
+      />
+
+
   </div>
 
 <!--  dialog-->
@@ -67,7 +78,7 @@
 
 <script setup>
 import {ref, watch, watchEffect} from "vue";
-
+import {request} from "./utils/request.js";
 // 数据
 
 let queryInput = $ref("");
@@ -101,47 +112,67 @@ let tableData = $ref([
 let tableDataCopy = Object.assign(tableData);
 let tableForm = $ref({});
 let dialogType = $ref('add');
+let total = $ref(10);
+let curPage = $ref(1);
+
 // 方法
+async function getTableData(cur){
+  let res = await request.get(`/user/list?pageNum=${cur}&pageSize=10`);
+  tableData = res.list;
+  total = res.total;
+  console.log(res)
+}
+getTableData(curPage)
+
+// 请求分页
+function handleChangePage(page){
+  getTableData(page)
+}
+
 // 删除
-function handleRowDelete({id}){
-  console.log(id)
+async function handleRowDelete({ID}){
   // 1. 通过id获取到条目对应的索引值
-  let index = tableData.findIndex(item=>item.id===id)
+  // let index = tableData.findIndex(item=>item.ID===id)
   // console.log(index);
   // 2. 通过索引值进行删除条目
-  tableData.splice(index, 1);
+  // tableData.splice(index, 1);
+  await request.delete(`/user/delete?id=${ID}`)
+  await getTableData(curPage)
 }
 // 选中
 function handleSelectionChange(val){
-
   // multipleSelection = val
-  console.log(val);
   multipleSelection = []
   val.forEach(item=>{
-    console.log(item)
-    multipleSelection.push(item.id);
-    console.log(multipleSelection)
+    console.log(item);
+    multipleSelection.push(item.ID);
   })
-  // console.log(multipleSelection)
 }
 // 新增
 function handleAdd(){
   dialogFormVisible = true;
   tableForm={}
 }
+
 // 确认添加
-function dialogConfirm (){
+async function dialogConfirm (){
   dialogFormVisible = false;
   // 判断是新增还是编辑
   if(dialogType==='add'){
     // 1. 拿到数据
     // 2. 添加到Table中
-    tableData.push({id:`${tableData.length+1}`, ...tableForm})
+    // tableData.push({id:`${tableData.length+1}`, ...tableForm})
+    let res = await request.post('/user/create',{...tableForm})
+    // 刷新数据
+    console.log(tableForm);
+    await getTableData(curPage);
   }else{
     // 1. 获取到当前索引
     // 2. 替换当前数据
-    const index = tableData.findIndex(item=>item.id===tableForm.id);
-    tableData.splice(index, 1, tableForm);
+    // const index = tableData.findIndex(item=>item.ID===tableForm.ID);
+    // tableData.splice(index, 1, tableForm);
+    let res = await request.put(`/user/update?id=${tableForm.ID}`, {...tableForm})
+    await  getTableData(curPage);
   }
 
 }
@@ -149,7 +180,6 @@ function dialogConfirm (){
 function handleDeleteList(){
   // console.log(multipleSelection);
   multipleSelection.forEach(id=>{
-    console.log(id);
     handleRowDelete({id});
   })
   multipleSelection=[]
@@ -162,13 +192,23 @@ function handleRowEdit(row){
   dialogFormVisible = true;
 }
 // 搜索
-function handleQueryName(val){
-  console.log(val);
+async function handleQueryName(val){
+  // console.log(val);
+  // if(val.length>0){
+  // tableData = tableData.filter(item=>item.name.match(val))
+  // }else{
+  //   tableData=tableDataCopy
+  // }
   if(val.length>0){
-  tableData = tableData.filter(item=>item.name.match(val))
+  console.log(val);
+  let res = await request.get(`/user/read?name=${val}`);
+  tableData = res
+
   }else{
-    tableData=tableDataCopy
+    await getTableData();
   }
+
+  // await getTableData(curPage)
 }
 
 </script>
